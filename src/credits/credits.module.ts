@@ -8,6 +8,6 @@ import { UserCredit } from './credit.entity';
   imports: [TypeOrmModule.forFeature([UserCredit])],
   providers: [CreditsService],
   controllers: [CreditsController],
-  exports: [CreditsService], // ✅ ADD THIS
+  exports: [CreditsService], // ✅ REQUIRED
 })
 export class CreditsModule {}

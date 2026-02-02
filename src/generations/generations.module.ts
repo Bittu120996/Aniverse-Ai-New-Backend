@@ -7,14 +7,12 @@ import { Generation } from './generation.entity';
 import { AiModule } from '../ai/ai.module';
 
 @Module({
-  imports: [
-  CreditsModule,
-  AiModule, // ✅ ADD
-  TypeOrmModule.forFeature([Generation]),
-],
-  providers: [GenerationsService],
+  imports: [TypeOrmModule.forFeature([Generation])],
   controllers: [GenerationsController],
+  providers: [GenerationsService],
+  exports: [GenerationsService], // ✅ ADD THIS
 })
 export class GenerationsModule {}
+
 
 

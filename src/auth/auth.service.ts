@@ -26,7 +26,7 @@ async signup(email: string, password: string) {
 
   const passwordHash = await bcrypt.hash(password, 10);
 
-  // 1️⃣ Create user FIRST
+  // 1️⃣ Create user
   const user = this.userRepo.create({
     email,
     passwordHash,
@@ -35,16 +35,17 @@ async signup(email: string, password: string) {
   const savedUser = await this.userRepo.save(user);
 
   // 2️⃣ Create credits WITH userId
-  const credits = this.userCreditRepo.create({
-    userId: savedUser.id, // ✅ THIS IS THE FIX
+  const credits = this.creditRepo.create({
+    userId: savedUser.id, // ✅ FIX
     creditBalance: 0,
     freeGenerationsUsed: 0,
   });
 
-  await this.userCreditRepo.save(credits);
+  await this.creditRepo.save(credits);
 
   return { message: 'Signup successful' };
 }
+
 
 async login(email: string, password: string) {
   const user = await this.userRepo.findOne({ where: { email } });

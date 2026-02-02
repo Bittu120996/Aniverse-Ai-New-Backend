@@ -23,39 +23,32 @@ export class AuthService {
                 private readonly jwtService: JwtService,
                 ) {}
 
-async signup(email: string, password: string) {
-  const existing = await this.userRepo.findOne({ where: { email } });
-  if (existing) {
-    throw new BadRequestException('Email already exists');
+
+    async signup(email: string, password: string) {
+    const existing = await this.userRepo.findOne({ where: { email } });
+    if (existing) {
+      throw new BadRequestException('Email already exists');
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await this.userRepo.save({
+      email,
+      passwordHash,
+    });
+
+    await this.creditRepo.save({
+      userId: user.id,
+      creditBalance: 0,
+      freeGenerationsUsed: 0,
+    });
+
+    return { message: 'Signup successful' };
   }
 
-  const passwordHash = await bcrypt.hash(password, 10);
 
-  // 1️⃣ Create user
-  const user = this.userRepo.create({
-    email,
-    passwordHash,
-  });
-
-  const savedUser = await this.userRepo.save(user);
-
-  // 2️⃣ Create credits WITH userId
-  const credits = this.creditRepo.create({
-    userId: savedUser.id, // ✅ FIX
-    creditBalance: 0,
-    freeGenerationsUsed: 0,
-  });
-
-  await this.creditRepo.save(credits);
-
-  return { message: 'Signup successful' };
-}
-
-
-async login(email: string, password: string) {
-  const user = await this.userRepo.findOne({
-    where: { email },
-  });
+ async login(email: string, password: string) {
+  const user = await this.userRepo.findOne({ where: { email } });
 
   if (!user) {
     throw new UnauthorizedException('Invalid credentials');
@@ -67,18 +60,14 @@ async login(email: string, password: string) {
     throw new UnauthorizedException('Invalid credentials');
   }
 
-  const payload = {
-    sub: user.id,
-    email: user.email,
-  };
-
-  const token = this.jwtService.sign(payload);
+  const payload = { sub: user.id, email: user.email };
 
   return {
     message: 'Login successful',
-    accessToken: token,
+    accessToken: this.jwtService.sign(payload),
   };
 }
+
 
 
                                                                                                         }

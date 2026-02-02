@@ -1,5 +1,10 @@
 import { JwtService } from '@nestjs/jwt';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -48,16 +53,18 @@ async signup(email: string, password: string) {
 
 
 async login(email: string, password: string) {
-  const user = await this.userRepo.findOne({ where: { email } });
+  const user = await this.userRepo.findOne({
+    where: { email },
+  });
 
   if (!user) {
-    throw new Error('Invalid email or password');
+    throw new UnauthorizedException('Invalid credentials');
   }
 
-  const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+  const isMatch = await bcrypt.compare(password, user.passwordHash);
 
-  if (!isPasswordValid) {
-    throw new Error('Invalid email or password');
+  if (!isMatch) {
+    throw new UnauthorizedException('Invalid credentials');
   }
 
   const payload = {
@@ -65,13 +72,14 @@ async login(email: string, password: string) {
     email: user.email,
   };
 
-  const accessToken = this.jwtService.sign(payload);
+  const token = this.jwtService.sign(payload);
 
   return {
     message: 'Login successful',
-    accessToken,
+    accessToken: token,
   };
 }
+
 
                                                                                                         }
                                                                                                         

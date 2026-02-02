@@ -18,37 +18,34 @@ export class AuthService {
                 private readonly jwtService: JwtService,
                 ) {}
 
+async signup(email: string, password: string) {
+  const existing = await this.userRepo.findOne({ where: { email } });
+  if (existing) {
+    throw new BadRequestException('Email already exists');
+  }
 
-                      async signup(email: string, password: string) {
-                          const existing = await this.userRepo.findOne({ where: { email } });
-                              if (existing) {
-                                    throw new BadRequestException('Email already registered');
-                                        }
+  const passwordHash = await bcrypt.hash(password, 10);
 
-                                            const passwordHash = await bcrypt.hash(password, 10);
+  // 1️⃣ Create user FIRST
+  const user = this.userRepo.create({
+    email,
+    passwordHash,
+  });
 
-                                                const user = this.userRepo.create({
-                                                      email,
-                                                            passwordHash,
-                                                                });
-                                                                await this.creditRepo.save({
-                                                                  userId: user.id,
-                                                                  creditBalance: 0,
-                                                                  freeGenerationsUsed: 0,
-                                                                });
+  const savedUser = await this.userRepo.save(user);
 
-                                                                    const savedUser = await this.userRepo.save(user);
+  // 2️⃣ Create credits WITH userId
+  const credits = this.userCreditRepo.create({
+    userId: savedUser.id, // ✅ THIS IS THE FIX
+    creditBalance: 0,
+    freeGenerationsUsed: 0,
+  });
 
-                                                                        const credits = this.creditRepo.create({
-                                                                              userId: savedUser.id,
-                                                                                    creditBalance: 0,
-                                                                                          freeGenerationsUsed: 0,
-                                                                                              });
+  await this.userCreditRepo.save(credits);
 
-                                                                                                  await this.creditRepo.save(credits);
+  return { message: 'Signup successful' };
+}
 
-                                                                                                      return { message: 'Signup successful' };
-                                                                                                        }
 async login(email: string, password: string) {
   const user = await this.userRepo.findOne({ where: { email } });
 

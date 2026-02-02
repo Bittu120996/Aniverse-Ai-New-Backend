@@ -7,7 +7,7 @@ import { UserCredit } from './credit.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([UserCredit])],
   providers: [CreditsService],
-  controllers: [CreditsController], // ✅ THIS WAS MISSING
-  exports: [CreditsService],
+  controllers: [CreditsController],
+  exports: [CreditsService], // ✅ ADD THIS
 })
 export class CreditsModule {}

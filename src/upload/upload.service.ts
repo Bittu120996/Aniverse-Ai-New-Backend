@@ -28,35 +28,23 @@ export class UploadService {
   file: Express.Multer.File,
   userId: string,
 ) {
-    await this.loadModels();
+  if (!file || !file.buffer) {
+    throw new BadRequestException('Invalid image file');
+  }
 
-    const img = await canvas.loadImage(file.buffer);
+  // TEMP: skip face-api in production
+  const base64Image = file.buffer.toString('base64');
 
-    const detections = await faceapi.detectAllFaces(
-      img as any,
-      new faceapi.TinyFaceDetectorOptions(),
-    );
+  UploadStore.set(userId, {
+    base64: base64Image,
+    mimeType: file.mimetype,
+    createdAt: Date.now(),
+  });
 
-    if (!detections || detections.length === 0) {
-      throw new BadRequestException('No face detected');
-    }
+  return {
+    message: 'Face image uploaded successfully',
+  };
+}
 
-    if (detections.length > 1) {
-      throw new BadRequestException('Multiple faces detected');
-    }
-
-    const base64Image = file.buffer.toString('base64');
-
-                UploadStore.set(userId, {
-            base64: base64Image,
-            mimeType: file.mimetype,
-            createdAt: Date.now(),
-            });
-
-            return {
-            message: 'Face image uploaded and ready for generation',
-            };
-
-            }
 }
 

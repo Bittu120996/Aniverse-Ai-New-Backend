@@ -39,17 +39,21 @@ export class UploadController {
     }),
   )
   async uploadFace(
-    @UploadedFile() file: Express.Multer.File,
-    @Req() req: any,
-  ) {
-    if (!file) {
-      throw new BadRequestException('Image file is required');
-    }
-
-    return this.uploadService.processFaceImage(
-      file,
-      req.user.userId,
-    );
+  @UploadedFile() file: Express.Multer.File,
+  @Req() req: any,
+) {
+  if (!file) {
+    throw new BadRequestException('Image file is required');
   }
+
+  if (!req.user || !req.user.userId) {
+    throw new BadRequestException('Invalid user context');
+  }
+
+  return this.uploadService.processFaceImage(
+    file,
+    req.user.userId,
+  );
+}
 }
 
